@@ -1,0 +1,280 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "PokéManager API",
+    "description": "API para gerenciamento de um catálogo local de Pokémons utilizando Node.js, TypeScript, Express e Clean Architecture."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3333/api/v1/pokemons",
+      "description": "Servidor local"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Pokemons",
+      "description": "Endpoints de gerenciamento de Pokémons"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "Pokemons"
+        ],
+        "summary": "Listar Pokémons",
+        "description": "Lista todos os Pokémons cadastrados. Permite filtrar por tipo.",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filtra os Pokémons pelo tipo",
+            "required": false,
+            "example": "Electric",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de Pokémons retornada com sucesso"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Pokemons"
+        ],
+        "summary": "Cadastrar Pokémon",
+        "description": "Adiciona um novo Pokémon ao catálogo local.",
+        "responses": {
+          "201": {
+            "description": "Pokémon criado com sucesso"
+          },
+          "400": {
+            "description": "Dados inválidos ou ID já cadastrado"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePokemonDTO"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{id}": {
+      "get": {
+        "tags": [
+          "Pokemons"
+        ],
+        "summary": "Buscar Pokémon por ID",
+        "description": "Retorna um Pokémon específico a partir do ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID do Pokémon",
+            "example": "25"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pokémon encontrado com sucesso"
+          },
+          "404": {
+            "description": "Pokémon não encontrado"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Pokemons"
+        ],
+        "summary": "Atualizar Pokémon",
+        "description": "Atualiza os dados de um Pokémon existente.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID do Pokémon",
+            "example": "25"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pokémon atualizado com sucesso"
+          },
+          "400": {
+            "description": "Dados inválidos"
+          },
+          "404": {
+            "description": "Pokémon não encontrado"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePokemonDTO"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Pokemons"
+        ],
+        "summary": "Remover Pokémon",
+        "description": "Remove um Pokémon do catálogo pelo ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID do Pokémon",
+            "example": "25"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Pokémon removido com sucesso"
+          },
+          "404": {
+            "description": "Pokémon não encontrado"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Pokemon": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "25"
+          },
+          "name": {
+            "type": "string",
+            "example": "Pikachu"
+          },
+          "type": {
+            "type": "string",
+            "example": "Electric"
+          },
+          "hp": {
+            "type": "number",
+            "example": 35
+          },
+          "attack": {
+            "type": "number",
+            "example": 55
+          },
+          "defense": {
+            "type": "number",
+            "example": 40
+          }
+        }
+      },
+      "CreatePokemonDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "25"
+          },
+          "name": {
+            "type": "string",
+            "example": "Pikachu"
+          },
+          "type": {
+            "type": "string",
+            "example": "Electric"
+          },
+          "hp": {
+            "type": "number",
+            "example": 35
+          },
+          "attack": {
+            "type": "number",
+            "example": 55
+          },
+          "defense": {
+            "type": "number",
+            "example": 40
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "hp",
+          "attack",
+          "defense"
+        ]
+      },
+      "UpdatePokemonDTO": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Pikachu Fortalecido"
+          },
+          "type": {
+            "type": "string",
+            "example": "Electric"
+          },
+          "hp": {
+            "type": "number",
+            "example": 50
+          },
+          "attack": {
+            "type": "number",
+            "example": 65
+          },
+          "defense": {
+            "type": "number",
+            "example": 45
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "hp",
+          "attack",
+          "defense"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Pokémon não encontrado no catálogo."
+          }
+        }
+      }
+    }
+  }
+}

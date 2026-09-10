@@ -1,0 +1,120 @@
+import { Request, Response } from 'express';
+
+import { CreatePokemonUseCase } from '@application/use-cases/createPokemon';
+import { DeletePokemonUseCase } from '@application/use-cases/deletePokemon';
+import { GetPokemonByIdUseCase } from '@application/use-cases/getPokemonById';
+import { ListPokemonsUseCase } from '@application/use-cases/listPokemons';
+import { UpdatePokemonUseCase } from '@application/use-cases/updatePokemon';
+
+export class PokemonController {
+  constructor(
+    private listPokemonsUseCase: ListPokemonsUseCase,
+    private getPokemonByIdUseCase: GetPokemonByIdUseCase,
+    private createPokemonUseCase: CreatePokemonUseCase,
+    private updatePokemonUseCase: UpdatePokemonUseCase,
+    private deletePokemonUseCase: DeletePokemonUseCase,
+  ) {}
+
+  async list(req: Request, res: Response): Promise<Response> {
+    const { type } = req.query;
+
+    const pokemons = await this.listPokemonsUseCase.execute({
+      type: type ? String(type) : undefined,
+    });
+
+    const formattedPokemons = pokemons.map((pokemon) => ({
+      id: pokemon.id,
+      name: pokemon.name,
+      type: pokemon.type,
+      hp: pokemon.hp,
+      attack: pokemon.attack,
+      defense: pokemon.defense,
+    }));
+
+    return res.status(200).json({
+      data: formattedPokemons,
+    });
+  }
+
+  async getById(req: Request, res: Response): Promise<Response> {
+    const id = String(req.params.id);
+
+    const pokemon = await this.getPokemonByIdUseCase.execute({
+      id,
+    });
+
+    return res.status(200).json({
+      data: {
+        id: pokemon.id,
+        name: pokemon.name,
+        type: pokemon.type,
+        hp: pokemon.hp,
+        attack: pokemon.attack,
+        defense: pokemon.defense,
+      },
+    });
+  }
+
+  async create(req: Request, res: Response): Promise<Response> {
+    const { id, name, type, hp, attack, defense } = req.body;
+
+    const pokemon = await this.createPokemonUseCase.execute({
+      id,
+      name,
+      type,
+      hp,
+      attack,
+      defense,
+    });
+
+    return res.status(201).json({
+      message: 'Pokémon criado com sucesso!',
+      data: {
+        id: pokemon.id,
+        name: pokemon.name,
+        type: pokemon.type,
+        hp: pokemon.hp,
+        attack: pokemon.attack,
+        defense: pokemon.defense,
+      },
+    });
+  }
+
+  async update(req: Request, res: Response): Promise<Response> {
+    const id = String(req.params.id);
+    const { name, type, hp, attack, defense } = req.body;
+
+    const pokemon = await this.updatePokemonUseCase.execute({
+      id,
+      data: {
+        name,
+        type,
+        hp,
+        attack,
+        defense,
+      },
+    });
+
+    return res.status(200).json({
+      message: 'Pokémon atualizado com sucesso!',
+      data: {
+        id: pokemon.id,
+        name: pokemon.name,
+        type: pokemon.type,
+        hp: pokemon.hp,
+        attack: pokemon.attack,
+        defense: pokemon.defense,
+      },
+    });
+  }
+
+  async delete(req: Request, res: Response): Promise<Response> {
+    const id = String(req.params.id);
+
+    await this.deletePokemonUseCase.execute({
+      id,
+    });
+
+    return res.status(204).send();
+  }
+}
