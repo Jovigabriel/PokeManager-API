@@ -1,7 +1,9 @@
 export interface UpdatePokemonDTO {
   name: string;
-  type: string;
+  image: string;
   hp: number;
   attack: number;
   defense: number;
+  types: string[];
+  trainerId: string | null;
 }

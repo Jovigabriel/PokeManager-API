@@ -3,11 +3,12 @@ import { DeletePokemonUseCase } from '@application/use-cases/deletePokemon';
 import { GetPokemonByIdUseCase } from '@application/use-cases/getPokemonById';
 import { ListPokemonsUseCase } from '@application/use-cases/listPokemons';
 import { UpdatePokemonUseCase } from '@application/use-cases/updatePokemon';
+import { UpdatePokemonLevelUseCase } from '@application/use-cases/updatePokemonLevel';
 
-import { InMemoryPokemonRepository } from '@infrastructure/database/in-memory/InMemoryPokemonRepository';
+import { PrismaPokemonRepository } from '@infrastructure/database/prisma/repositories/PrismaPokemonRepository';
 import { PokemonController } from '@infrastructure/http/controllers/pokemonController';
 
-const pokemonRepository = new InMemoryPokemonRepository();
+const pokemonRepository = new PrismaPokemonRepository();
 
 export function makePokemonController(): PokemonController {
   const listPokemonsUseCase = new ListPokemonsUseCase(pokemonRepository);
@@ -18,6 +19,10 @@ export function makePokemonController(): PokemonController {
 
   const updatePokemonUseCase = new UpdatePokemonUseCase(pokemonRepository);
 
+  const updatePokemonLevelUseCase = new UpdatePokemonLevelUseCase(
+    pokemonRepository,
+  );
+
   const deletePokemonUseCase = new DeletePokemonUseCase(pokemonRepository);
 
   return new PokemonController(
@@ -25,6 +30,7 @@ export function makePokemonController(): PokemonController {
     getPokemonByIdUseCase,
     createPokemonUseCase,
     updatePokemonUseCase,
+    updatePokemonLevelUseCase,
     deletePokemonUseCase,
   );
 }

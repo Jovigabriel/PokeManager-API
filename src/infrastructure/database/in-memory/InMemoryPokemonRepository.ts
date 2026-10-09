@@ -1,5 +1,8 @@
 import { Pokemon } from '@domain/entities/pokemon';
-import { IPokemonRepository } from '@domain/repositories/pokemon-repository';
+import {
+  IPokemonRepository,
+  ListPokemonsParams,
+} from '@domain/repositories/pokemon-repository';
 
 export class InMemoryPokemonRepository implements IPokemonRepository {
   public items: Pokemon[] = [];
@@ -15,35 +18,76 @@ export class InMemoryPokemonRepository implements IPokemonRepository {
   async findById(id: string): Promise<Pokemon | null> {
     const pokemon = this.items.find((item) => item.id === id);
 
-    if (!pokemon) {
-      return null;
-    }
-    return pokemon;
+    return pokemon ?? null;
   }
 
   async findByType(type: string): Promise<Pokemon[]> {
-    return this.items.filter(
-      (item) => item.type.toLowerCase() === type.toLowerCase(),
+    return this.items.filter((pokemon) =>
+      pokemon.types.some(
+        (pokemonType) => pokemonType.toLowerCase() === type.toLowerCase(),
+      ),
     );
   }
 
-  async update(pokemon: Pokemon): Promise<void> {
-    const pokemonIndex = this.items.findIndex((item) => item.id === pokemon.id);
+  async findByTrainerId(trainerId: string): Promise<Pokemon[]> {
+    return this.items.filter((pokemon) => pokemon.trainerId === trainerId);
+  }
 
-    if (pokemonIndex === -1) {
-      return;
+  async countByTrainerId(trainerId: string): Promise<number> {
+    return this.items.filter((pokemon) => pokemon.trainerId === trainerId)
+      .length;
+  }
+
+  async list({ page, limit, type }: ListPokemonsParams): Promise<Pokemon[]> {
+    let pokemons = this.items;
+
+    if (type) {
+      pokemons = pokemons.filter((pokemon) =>
+        pokemon.types.some(
+          (pokemonType) => pokemonType.toLowerCase() === type.toLowerCase(),
+        ),
+      );
     }
 
-    this.items[pokemonIndex] = pokemon;
+    const start = (page - 1) * limit;
+    const end = start + limit;
+
+    return pokemons.slice(start, end);
+  }
+
+  async count(type?: string): Promise<number> {
+    if (!type) {
+      return this.items.length;
+    }
+
+    return this.items.filter((pokemon) =>
+      pokemon.types.some(
+        (pokemonType) => pokemonType.toLowerCase() === type.toLowerCase(),
+      ),
+    ).length;
+  }
+
+  async update(pokemon: Pokemon): Promise<void> {
+    const index = this.items.findIndex((item) => item.id === pokemon.id);
+
+    if (index !== -1) {
+      this.items[index] = pokemon;
+    }
+  }
+
+  async updateLevel(id: string, newLevel: number): Promise<void> {
+    const pokemon = this.items.find((item) => item.id === id);
+
+    if (pokemon) {
+      pokemon.updateLevel(newLevel);
+    }
   }
 
   async delete(id: string): Promise<void> {
-    const pokemonIndex = this.items.findIndex((item) => item.id === id);
+    const index = this.items.findIndex((item) => item.id === id);
 
-    if (pokemonIndex === -1) {
-      return;
+    if (index !== -1) {
+      this.items.splice(index, 1);
     }
-
-    this.items.splice(pokemonIndex, 1);
   }
 }

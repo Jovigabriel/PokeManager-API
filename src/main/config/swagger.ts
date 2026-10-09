@@ -11,6 +11,8 @@ export const setupSwagger = (app: Express): void => {
     const swaggerDocument = JSON.parse(fs.readFileSync(swaggerFile, 'utf8'));
 
     app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+    app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
   } else {
     console.warn(
       'Arquivo swagger-output.json não encontrado. Execute "npm run swagger".',

@@ -1,29 +1,54 @@
 import { Router } from 'express';
 
+import { validateRequest } from '@infrastructure/http/middlewares/validateRequest';
+import {
+  listPokemonsSchema,
+  updatePokemonLevelSchema,
+} from '@infrastructure/http/validators/pokemonSchemas';
 import { makePokemonController } from '@main/factories/makePokemonController.factory';
 
 const pokemonRoutes = Router();
 
 const pokemonController = makePokemonController();
 
-pokemonRoutes.get('/', (req, res) => {
+pokemonRoutes.get('/', validateRequest(listPokemonsSchema), (req, res) => {
   /*
-    #swagger.tags = ['Pokemons']
-    #swagger.summary = 'Listar Pokémons'
-    #swagger.description = 'Lista todos os Pokémons cadastrados. Permite filtrar por tipo.'
+      #swagger.tags = ['Pokemons']
+      #swagger.summary = 'Listar Pokémons'
+      #swagger.description = 'Lista os Pokémons cadastrados com paginação e filtro opcional por tipo.'
 
-    #swagger.parameters['type'] = {
-      in: 'query',
-      description: 'Filtra os Pokémons pelo tipo',
-      required: false,
-      type: 'string',
-      example: 'Electric'
-    }
+      #swagger.parameters['page'] = {
+        in: 'query',
+        description: 'Número da página',
+        required: false,
+        type: 'integer',
+        example: 1
+      }
 
-    #swagger.responses[200] = {
-      description: 'Lista de Pokémons retornada com sucesso'
-    }
-  */
+      #swagger.parameters['limit'] = {
+        in: 'query',
+        description: 'Quantidade de Pokémons por página',
+        required: false,
+        type: 'integer',
+        example: 10
+      }
+
+      #swagger.parameters['type'] = {
+        in: 'query',
+        description: 'Filtra os Pokémons pelo tipo',
+        required: false,
+        type: 'string',
+        example: 'fire'
+      }
+
+      #swagger.responses[200] = {
+        description: 'Lista de Pokémons retornada com sucesso'
+      }
+
+      #swagger.responses[400] = {
+        description: 'Parâmetros de consulta inválidos'
+      }
+    */
 
   return pokemonController.list(req, res);
 });
@@ -123,6 +148,58 @@ pokemonRoutes.put('/:id', (req, res) => {
 
   return pokemonController.update(req, res);
 });
+
+pokemonRoutes.patch(
+  '/:id/level',
+  validateRequest(updatePokemonLevelSchema),
+  (req, res) => {
+    /*
+      #swagger.tags = ['Pokemons']
+      #swagger.summary = 'Atualizar nível do Pokémon'
+      #swagger.description = 'Atualiza apenas o nível de um Pokémon específico.'
+
+      #swagger.parameters['id'] = {
+        in: 'path',
+        description: 'ID do Pokémon',
+        required: true,
+        type: 'string',
+        example: '25'
+      }
+
+      #swagger.requestBody = {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["level"],
+              properties: {
+                level: {
+                  type: "integer",
+                  example: 10
+                }
+              }
+            }
+          }
+        }
+      }
+
+      #swagger.responses[200] = {
+        description: 'Nível atualizado com sucesso'
+      }
+
+      #swagger.responses[400] = {
+        description: 'Nível inválido'
+      }
+
+      #swagger.responses[404] = {
+        description: 'Pokémon não encontrado'
+      }
+    */
+
+    return pokemonController.updateLevel(req, res);
+  },
+);
 
 pokemonRoutes.delete('/:id', (req, res) => {
   /*

@@ -1,13 +1,13 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "version": "1.0.0",
+    "version": "2.0.0",
     "title": "PokéManager API",
-    "description": "API para gerenciamento de um catálogo local de Pokémons utilizando Node.js, TypeScript, Express e Clean Architecture."
+    "description": "API para gerenciamento de treinadores e Pokémons, com integração à PokéAPI, utilizando Node.js, TypeScript, Express, Prisma e Clean Architecture."
   },
   "servers": [
     {
-      "url": "http://localhost:3333/api/v1/pokemons",
+      "url": "http://localhost:3333",
       "description": "Servidor local"
     }
   ],
@@ -15,23 +15,51 @@
     {
       "name": "Pokemons",
       "description": "Endpoints de gerenciamento de Pokémons"
+    },
+    {
+      "name": "Trainers",
+      "description": "Endpoints de gerenciamento de treinadores"
+    },
+    {
+      "name": "Pokedex",
+      "description": "Endpoints de consulta à PokéAPI"
     }
   ],
   "paths": {
-    "/": {
+    "/api/v1/pokemons": {
       "get": {
         "tags": [
           "Pokemons"
         ],
         "summary": "Listar Pokémons",
-        "description": "Lista todos os Pokémons cadastrados. Permite filtrar por tipo.",
+        "description": "Lista os Pokémons cadastrados com paginação e filtro opcional por tipo.",
         "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Número da página",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Quantidade de Pokémons por página",
+            "required": false,
+            "example": 10,
+            "schema": {
+              "type": "integer"
+            }
+          },
           {
             "name": "type",
             "in": "query",
             "description": "Filtra os Pokémons pelo tipo",
             "required": false,
-            "example": "Electric",
+            "example": "electric",
             "schema": {
               "type": "string"
             }
@@ -40,6 +68,9 @@
         "responses": {
           "200": {
             "description": "Lista de Pokémons retornada com sucesso"
+          },
+          "400": {
+            "description": "Parâmetros de consulta inválidos"
           }
         }
       },
@@ -48,13 +79,13 @@
           "Pokemons"
         ],
         "summary": "Cadastrar Pokémon",
-        "description": "Adiciona um novo Pokémon ao catálogo local.",
+        "description": "",
         "responses": {
           "201": {
             "description": "Pokémon criado com sucesso"
           },
           "400": {
-            "description": "Dados inválidos ou ID já cadastrado"
+            "description": "Dados inválidos"
           }
         },
         "requestBody": {
@@ -69,13 +100,13 @@
         }
       }
     },
-    "/{id}": {
+    "/api/v1/pokemons/{id}": {
       "get": {
         "tags": [
           "Pokemons"
         ],
         "summary": "Buscar Pokémon por ID",
-        "description": "Retorna um Pokémon específico a partir do ID.",
+        "description": "",
         "parameters": [
           {
             "name": "id",
@@ -84,8 +115,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "ID do Pokémon",
-            "example": "25"
+            "description": "ID do Pokémon"
           }
         ],
         "responses": {
@@ -102,7 +132,7 @@
           "Pokemons"
         ],
         "summary": "Atualizar Pokémon",
-        "description": "Atualiza os dados de um Pokémon existente.",
+        "description": "",
         "parameters": [
           {
             "name": "id",
@@ -111,16 +141,12 @@
             "schema": {
               "type": "string"
             },
-            "description": "ID do Pokémon",
-            "example": "25"
+            "description": "ID do Pokémon"
           }
         ],
         "responses": {
           "200": {
             "description": "Pokémon atualizado com sucesso"
-          },
-          "400": {
-            "description": "Dados inválidos"
           },
           "404": {
             "description": "Pokémon não encontrado"
@@ -142,7 +168,35 @@
           "Pokemons"
         ],
         "summary": "Remover Pokémon",
-        "description": "Remove um Pokémon do catálogo pelo ID.",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID do Pokémon"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Pokémon removido com sucesso"
+          },
+          "404": {
+            "description": "Pokémon não encontrado"
+          }
+        }
+      }
+    },
+    "/api/v1/pokemons/{id}/level": {
+      "patch": {
+        "tags": [
+          "Pokemons"
+        ],
+        "summary": "Atualizar nível do Pokémon",
+        "description": "Atualiza apenas o nível de um Pokémon específico.",
         "parameters": [
           {
             "name": "id",
@@ -156,11 +210,201 @@
           }
         ],
         "responses": {
-          "204": {
-            "description": "Pokémon removido com sucesso"
+          "200": {
+            "description": "Nível atualizado com sucesso"
+          },
+          "400": {
+            "description": "Nível inválido"
           },
           "404": {
             "description": "Pokémon não encontrado"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "level"
+                ],
+                "properties": {
+                  "level": {
+                    "type": "integer",
+                    "example": 10
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pokedex/search": {
+      "get": {
+        "tags": [
+          "Pokedex"
+        ],
+        "summary": "Buscar Pokémon na PokéAPI",
+        "description": "Busca um Pokémon pelo nome diretamente na PokéAPI.",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "description": "Nome do Pokémon",
+            "example": "pikachu",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pokémon encontrado com sucesso"
+          },
+          "400": {
+            "description": "Nome inválido"
+          },
+          "404": {
+            "description": "Pokémon não encontrado na PokéAPI"
+          }
+        }
+      }
+    },
+    "/api/v1/trainers": {
+      "post": {
+        "tags": [
+          "Trainers"
+        ],
+        "summary": "Cadastrar treinador",
+        "description": "",
+        "responses": {
+          "201": {
+            "description": "Treinador criado com sucesso"
+          },
+          "400": {
+            "description": "Dados inválidos"
+          },
+          "409": {
+            "description": "Já existe um treinador com este e-mail"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainerDTO"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/trainers/{trainerId}/captures": {
+      "post": {
+        "tags": [
+          "Trainers"
+        ],
+        "summary": "Capturar Pokémon",
+        "description": "Busca o Pokémon na PokéAPI e adiciona ao time do treinador.",
+        "parameters": [
+          {
+            "name": "trainerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID do treinador"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Pokémon capturado com sucesso"
+          },
+          "400": {
+            "description": "Dados inválidos"
+          },
+          "404": {
+            "description": "Treinador ou Pokémon não encontrado"
+          },
+          "409": {
+            "description": "Limite máximo de 6 Pokémons atingido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CapturePokemonDTO"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/trainers/{trainerId}/team": {
+      "get": {
+        "tags": [
+          "Trainers"
+        ],
+        "summary": "Listar time do treinador",
+        "description": "",
+        "parameters": [
+          {
+            "name": "trainerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID do treinador"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Time retornado com sucesso"
+          },
+          "400": {
+            "description": "trainerId inválido"
+          },
+          "404": {
+            "description": "Treinador não encontrado"
+          }
+        }
+      }
+    },
+    "/api/v1/trainers/{trainerId}": {
+      "delete": {
+        "tags": [
+          "Trainers"
+        ],
+        "summary": "Excluir treinador",
+        "description": "Exclui o treinador e mantém os Pokémons cadastrados, removendo a associação com o treinador.",
+        "parameters": [
+          {
+            "name": "trainerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID do treinador"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Treinador excluído com sucesso"
+          },
+          "400": {
+            "description": "trainerId inválido"
+          },
+          "404": {
+            "description": "Treinador não encontrado"
           }
         }
       }
@@ -173,15 +417,15 @@
         "properties": {
           "id": {
             "type": "string",
-            "example": "25"
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           },
           "name": {
             "type": "string",
-            "example": "Pikachu"
+            "example": "pikachu"
           },
-          "type": {
+          "image": {
             "type": "string",
-            "example": "Electric"
+            "example": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png"
           },
           "hp": {
             "type": "number",
@@ -194,6 +438,19 @@
           "defense": {
             "type": "number",
             "example": 40
+          },
+          "types": {
+            "type": "array",
+            "example": [
+              "electric"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "trainerId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
           }
         }
       },
@@ -202,15 +459,15 @@
         "properties": {
           "id": {
             "type": "string",
-            "example": "25"
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           },
           "name": {
             "type": "string",
-            "example": "Pikachu"
+            "example": "pikachu"
           },
-          "type": {
+          "image": {
             "type": "string",
-            "example": "Electric"
+            "example": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png"
           },
           "hp": {
             "type": "number",
@@ -223,15 +480,26 @@
           "defense": {
             "type": "number",
             "example": 40
-          }
+          },
+          "types": {
+            "type": "array",
+            "example": [
+              "electric"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "trainerId": {}
         },
         "required": [
           "id",
           "name",
-          "type",
+          "image",
           "hp",
           "attack",
-          "defense"
+          "defense",
+          "types"
         ]
       },
       "UpdatePokemonDTO": {
@@ -239,39 +507,147 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "Pikachu Fortalecido"
+            "example": "pikachu"
           },
-          "type": {
+          "image": {
             "type": "string",
-            "example": "Electric"
+            "example": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png"
           },
           "hp": {
             "type": "number",
-            "example": 50
+            "example": 40
           },
           "attack": {
             "type": "number",
-            "example": 65
+            "example": 60
           },
           "defense": {
             "type": "number",
             "example": 45
+          },
+          "types": {
+            "type": "array",
+            "example": [
+              "electric"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "trainerId": {}
+        },
+        "required": [
+          "name",
+          "image",
+          "hp",
+          "attack",
+          "defense",
+          "types"
+        ]
+      },
+      "Trainer": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "name": {
+            "type": "string",
+            "example": "Ash Ketchum"
+          },
+          "email": {
+            "type": "string",
+            "example": "ash@email.com"
+          },
+          "city": {
+            "type": "string",
+            "example": "Pallet"
+          }
+        }
+      },
+      "CreateTrainerDTO": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Ash Ketchum"
+          },
+          "email": {
+            "type": "string",
+            "example": "ash@email.com"
+          },
+          "city": {
+            "type": "string",
+            "example": "Pallet"
           }
         },
         "required": [
           "name",
-          "type",
-          "hp",
-          "attack",
-          "defense"
+          "email",
+          "city"
         ]
+      },
+      "CapturePokemonDTO": {
+        "type": "object",
+        "properties": {
+          "pokemonName": {
+            "type": "string",
+            "example": "pikachu"
+          }
+        },
+        "required": [
+          "pokemonName"
+        ]
+      },
+      "PokedexPokemon": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "pikachu"
+          },
+          "image": {
+            "type": "string",
+            "example": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png"
+          },
+          "hp": {
+            "type": "number",
+            "example": 35
+          },
+          "attack": {
+            "type": "number",
+            "example": 55
+          },
+          "defense": {
+            "type": "number",
+            "example": 40
+          },
+          "types": {
+            "type": "array",
+            "example": [
+              "electric"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       },
       "ErrorResponse": {
         "type": "object",
         "properties": {
+          "status": {
+            "type": "string",
+            "example": "error"
+          },
+          "statusCode": {
+            "type": "number",
+            "example": 404
+          },
           "message": {
             "type": "string",
-            "example": "Pokémon não encontrado no catálogo."
+            "example": "Recurso não encontrado."
           }
         }
       }

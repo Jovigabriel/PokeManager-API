@@ -1,7 +1,7 @@
-import { IPokemonRepository } from '@domain/repositories/pokemon-repository';
 import { UpdatePokemonDTO } from '@application/dtos/updatePokemonDto';
 import { Pokemon } from '@domain/entities/pokemon';
-import { AppError } from '@domain/errors/app.error';
+import { NotFoundError } from '@domain/errors/not-found.error';
+import { IPokemonRepository } from '@domain/repositories/pokemon-repository';
 
 interface UpdatePokemonInput {
   id: string;
@@ -11,20 +11,22 @@ interface UpdatePokemonInput {
 export class UpdatePokemonUseCase {
   constructor(private pokemonRepository: IPokemonRepository) {}
 
-  async execute(input: UpdatePokemonInput): Promise<Pokemon> {
-    const pokemon = await this.pokemonRepository.findById(input.id);
+  async execute({ id, data }: UpdatePokemonInput): Promise<Pokemon> {
+    const pokemon = await this.pokemonRepository.findById(id);
 
     if (!pokemon) {
-      throw new AppError('Pokemon não encontrado no catalogo', 404);
+      throw new NotFoundError('Pokémon não encontrado no catálogo.');
     }
 
     const updatedPokemon = new Pokemon({
       id: pokemon.id,
-      name: input.data.name,
-      type: input.data.type,
-      hp: input.data.hp,
-      attack: input.data.attack,
-      defense: input.data.defense,
+      name: data.name,
+      image: data.image,
+      hp: data.hp,
+      attack: data.attack,
+      defense: data.defense,
+      types: data.types,
+      trainerId: data.trainerId,
     });
 
     await this.pokemonRepository.update(updatedPokemon);

@@ -2,3 +2,5 @@
 /exercicios
 /dist
 .env
+/generated/prisma
+.vscode/

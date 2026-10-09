@@ -5,6 +5,7 @@ import { DeletePokemonUseCase } from '@application/use-cases/deletePokemon';
 import { GetPokemonByIdUseCase } from '@application/use-cases/getPokemonById';
 import { ListPokemonsUseCase } from '@application/use-cases/listPokemons';
 import { UpdatePokemonUseCase } from '@application/use-cases/updatePokemon';
+import { UpdatePokemonLevelUseCase } from '@application/use-cases/updatePokemonLevel';
 
 export class PokemonController {
   constructor(
@@ -12,27 +13,34 @@ export class PokemonController {
     private getPokemonByIdUseCase: GetPokemonByIdUseCase,
     private createPokemonUseCase: CreatePokemonUseCase,
     private updatePokemonUseCase: UpdatePokemonUseCase,
+    private updatePokemonLevelUseCase: UpdatePokemonLevelUseCase,
     private deletePokemonUseCase: DeletePokemonUseCase,
   ) {}
 
   async list(req: Request, res: Response): Promise<Response> {
-    const { type } = req.query;
+    const { page, limit, type } = req.query;
 
-    const pokemons = await this.listPokemonsUseCase.execute({
-      type: type ? String(type) : undefined,
+    const result = await this.listPokemonsUseCase.execute({
+      page: Number(page ?? 1),
+      limit: Number(limit ?? 10),
+      type: type ? String(type).toLowerCase() : undefined,
     });
 
-    const formattedPokemons = pokemons.map((pokemon) => ({
+    const formattedPokemons = result.data.map((pokemon) => ({
       id: pokemon.id,
       name: pokemon.name,
-      type: pokemon.type,
+      image: pokemon.image,
       hp: pokemon.hp,
       attack: pokemon.attack,
       defense: pokemon.defense,
+      level: pokemon.level,
+      types: pokemon.types,
+      trainerId: pokemon.trainerId,
     }));
 
     return res.status(200).json({
       data: formattedPokemons,
+      meta: result.meta,
     });
   }
 
@@ -47,24 +55,29 @@ export class PokemonController {
       data: {
         id: pokemon.id,
         name: pokemon.name,
-        type: pokemon.type,
+        image: pokemon.image,
         hp: pokemon.hp,
         attack: pokemon.attack,
         defense: pokemon.defense,
+        level: pokemon.level,
+        types: pokemon.types,
+        trainerId: pokemon.trainerId,
       },
     });
   }
 
   async create(req: Request, res: Response): Promise<Response> {
-    const { id, name, type, hp, attack, defense } = req.body;
+    const { id, name, image, hp, attack, defense, types, trainerId } = req.body;
 
     const pokemon = await this.createPokemonUseCase.execute({
       id,
       name,
-      type,
+      image,
       hp,
       attack,
       defense,
+      types,
+      trainerId,
     });
 
     return res.status(201).json({
@@ -72,26 +85,32 @@ export class PokemonController {
       data: {
         id: pokemon.id,
         name: pokemon.name,
-        type: pokemon.type,
+        image: pokemon.image,
         hp: pokemon.hp,
         attack: pokemon.attack,
         defense: pokemon.defense,
+        level: pokemon.level,
+        types: pokemon.types,
+        trainerId: pokemon.trainerId,
       },
     });
   }
 
   async update(req: Request, res: Response): Promise<Response> {
     const id = String(req.params.id);
-    const { name, type, hp, attack, defense } = req.body;
+
+    const { name, image, hp, attack, defense, types, trainerId } = req.body;
 
     const pokemon = await this.updatePokemonUseCase.execute({
       id,
       data: {
         name,
-        type,
+        image,
         hp,
         attack,
         defense,
+        types,
+        trainerId,
       },
     });
 
@@ -100,10 +119,32 @@ export class PokemonController {
       data: {
         id: pokemon.id,
         name: pokemon.name,
-        type: pokemon.type,
+        image: pokemon.image,
         hp: pokemon.hp,
         attack: pokemon.attack,
         defense: pokemon.defense,
+        level: pokemon.level,
+        types: pokemon.types,
+        trainerId: pokemon.trainerId,
+      },
+    });
+  }
+
+  async updateLevel(req: Request, res: Response): Promise<Response> {
+    const id = String(req.params.id);
+    const { level } = req.body;
+
+    const pokemon = await this.updatePokemonLevelUseCase.execute({
+      id,
+      level: Number(level),
+    });
+
+    return res.status(200).json({
+      message: 'Nível do Pokémon atualizado com sucesso!',
+      data: {
+        id: pokemon.id,
+        name: pokemon.name,
+        level: pokemon.level,
       },
     });
   }
